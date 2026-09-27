@@ -25,3 +25,18 @@ def write_yaml(tmp_path):
         return path
 
     return _write
+
+
+@pytest.fixture
+def verified_profiles():
+    """Library with one verified (non-placeholder) HP entry, independent of config/."""
+    from shipdraw.profiles import ProfileLibrary, ProfileWeight
+
+    return ProfileLibrary({"HP 160x8": ProfileWeight(12.4)})
+
+
+@pytest.fixture
+def shipped_profiles():
+    from shipdraw.profiles import ProfileLibrary
+
+    return ProfileLibrary.load(CONFIG_DIR / "profiles.yaml")

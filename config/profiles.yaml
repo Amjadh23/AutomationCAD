@@ -1,0 +1,10 @@
+# Stiffener profile library.
+# FB (flat bar) and L (angle) weights are calculated from their dimensions.
+# HP (bulb flat) weights must be listed here. Every value below is a PLACEHOLDER
+# estimate: replace it with the supplier's table and delete "placeholder: true".
+hp:
+  "HP 120x7":  { kg_per_m: 7.8,  placeholder: true }
+  "HP 140x7":  { kg_per_m: 9.3,  placeholder: true }
+  "HP 160x8":  { kg_per_m: 12.4, placeholder: true }
+  "HP 180x9":  { kg_per_m: 15.5, placeholder: true }
+  "HP 200x10": { kg_per_m: 19.0, placeholder: true }
