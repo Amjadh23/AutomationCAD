@@ -1,0 +1,23 @@
+# Example job: transverse bulkhead at FR25 of a 60 m offshore support vessel.
+project:
+  name: "OSV 60m"
+  drawing_no: "SY-101"
+  title: "TRANSVERSE BULKHEAD AT FR25"
+  drawn_by: "AH"
+  revision: "A"
+  date: 2026-09-28
+frames:
+  first: 20
+  last: 30
+  spacing: 600
+bulkhead:
+  at_frame: 25
+  outline_half:            # (y from CL, z from baseline) in mm; starboard half, CL to CL
+    - [0, 0]
+    - [3600, 0]
+    - [4500, 900]          # 900 x 900 bilge chamfer
+    - [4500, 3500]
+    - [0, 3500]
+  plate:      { thickness: 8, grade: "AH36" }
+  stiffeners: { profile: "HP 160x8", spacing: 600, first_at: 300 }
+  brackets:   { top: true, bottom: true, size: 250, thickness: 8 }

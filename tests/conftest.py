@@ -40,3 +40,19 @@ def shipped_profiles():
     from shipdraw.profiles import ProfileLibrary
 
     return ProfileLibrary.load(CONFIG_DIR / "profiles.yaml")
+
+
+EXAMPLE_JOB = ROOT / "jobs" / "bhd-fr25.yaml"
+
+
+@pytest.fixture
+def job_dict():
+    """A fresh, mutable copy of the example job as plain data."""
+    return yaml.safe_load(EXAMPLE_JOB.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def example_job():
+    from shipdraw.job import load_job
+
+    return load_job(EXAMPLE_JOB)
