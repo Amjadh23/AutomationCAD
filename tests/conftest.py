@@ -63,3 +63,10 @@ def example_parts(example_job):
     from shipdraw.structure import build_parts
 
     return build_parts(example_job)
+
+
+@pytest.fixture
+def example_plan(example_parts, standard):
+    from shipdraw.layout import plan_sheet
+
+    return plan_sheet(example_parts, standard)
