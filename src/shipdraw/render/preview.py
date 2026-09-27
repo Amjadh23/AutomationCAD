@@ -14,7 +14,8 @@ _PLOT_STYLE = Configuration(color_policy=ColorPolicy.BLACK, background_policy=Ba
 _MM_PER_INCH = 25.4
 
 
-def render_png(doc: Drawing, path: Path, sheet_width_mm: float, sheet_height_mm: float, dpi: int = 100) -> None:
+def render_png(doc: Drawing, path: Path, sheet_width_mm: float, sheet_height_mm: float, dpi: int = 150) -> None:
+    # Below ~150 dpi the rasteriser drops strokes from the 1.8 mm title-block captions.
     mpl_draw.qsave(
         doc.modelspace(),
         path,

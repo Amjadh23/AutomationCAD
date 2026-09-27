@@ -2890,7 +2890,7 @@ git commit -m "feat: BOM table on the drawing sheet" -m "Co-Authored-By: Claude 
   - `build(job, standard, profiles, out_dir, *, preview=True) -> BuildResult`
   - `BuildResult(job, report, scale, stiffener_count, bracket_count, total_weight_kg, seconds, files)` with `.ok`
   - `format_summary(result) -> str`
-  - `render_png(doc, path, sheet_width_mm, sheet_height_mm, dpi=100)`
+  - `render_png(doc, path, sheet_width_mm, sheet_height_mm, dpi=150)`
   - Output files in `out_dir`: `<dwg>.dxf`, `<dwg>-bom.csv`, `<dwg>.png` (when `preview` is set) and `<dwg>-report.txt`, each written atomically. Nothing is written when there are rule errors.
 
 - [ ] **Step 1: Write the failing tests**
@@ -2985,7 +2985,8 @@ _PLOT_STYLE = Configuration(color_policy=ColorPolicy.BLACK, background_policy=Ba
 _MM_PER_INCH = 25.4
 
 
-def render_png(doc: Drawing, path: Path, sheet_width_mm: float, sheet_height_mm: float, dpi: int = 100) -> None:
+def render_png(doc: Drawing, path: Path, sheet_width_mm: float, sheet_height_mm: float, dpi: int = 150) -> None:
+    # Below ~150 dpi the rasteriser drops strokes from the 1.8 mm title-block captions.
     mpl_draw.qsave(
         doc.modelspace(),
         path,
