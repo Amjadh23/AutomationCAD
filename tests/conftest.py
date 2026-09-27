@@ -56,3 +56,10 @@ def example_job():
     from shipdraw.job import load_job
 
     return load_job(EXAMPLE_JOB)
+
+
+@pytest.fixture
+def example_parts(example_job):
+    from shipdraw.structure import build_parts
+
+    return build_parts(example_job)
