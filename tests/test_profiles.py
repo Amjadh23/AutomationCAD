@@ -66,3 +66,7 @@ def test_library_rejects_bad_weight(write_yaml):
     path = write_yaml({"hp": {"HP 160x8": {"kg_per_m": -1}}})
     with pytest.raises(ConfigError, match=r"hp\.HP 160x8\.kg_per_m"):
         ProfileLibrary.load(path)
+
+
+def test_hp_names_are_sorted_by_size(shipped_profiles):
+    assert shipped_profiles.hp_names() == ["HP 120x7", "HP 140x7", "HP 160x8", "HP 180x9", "HP 200x10"]

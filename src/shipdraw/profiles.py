@@ -79,6 +79,9 @@ class ProfileLibrary:
             entries[name] = ProfileWeight(entry.kg_per_m, placeholder=entry.placeholder)
         return cls(entries)
 
+    def hp_names(self) -> list[str]:
+        return sorted(self._hp, key=lambda name: parse_profile(name).dims)
+
     def weight(self, name: str) -> ProfileWeight:
         spec = parse_profile(name)
         if spec.kind == "FB":
