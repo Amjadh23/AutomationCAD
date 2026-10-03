@@ -30,6 +30,16 @@ To make a new drawing, copy `jobs/bhd-fr25.yaml`, change the values and run the 
 
 Exit codes: `0` = drawing written, `1` = rule errors (nothing written; see the report on screen), `2` = the job or config file is invalid.
 
+## The drawing page (no commands needed)
+
+Double-click **`Start drawing tool.bat`**. A black window opens; keep it open, and your browser shows the page.
+
+1. Type the measurements on the left. The drawing on the right updates by itself.
+2. Red boxes need fixing. Yellow notes are just for your attention.
+3. Use the buttons at the top to download the AutoCAD file, the picture, the Excel list, or everything as a .zip.
+
+Close the black window to stop the tool.
+
 ## Company standard
 
 - `config/standard.yaml` holds the sheet, layers, text sizes, dimension style, title block and rule limits. **All values are placeholders** until the client's standard is supplied. Change them there; no code changes are needed.

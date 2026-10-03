@@ -30,3 +30,15 @@ def test_missing_command_is_a_usage_error():
     with pytest.raises(SystemExit) as exit_info:
         main([])
     assert exit_info.value.code == 2
+
+
+def test_serve_starts_the_page_server(monkeypatch):
+    calls = {}
+
+    def fake_serve(service, port, open_browser):
+        calls.update(service=service, port=port, open_browser=open_browser)
+
+    monkeypatch.setattr("shipdraw.cli.serve", fake_serve)
+    assert main(["serve", "--port", "9000", "--no-browser"]) == 0
+    assert calls["port"] == 9000 and calls["open_browser"] is False
+    assert calls["service"].defaults()["values"]["drawing_no"] == "SY-101"
