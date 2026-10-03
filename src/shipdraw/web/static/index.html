@@ -1,1 +1,71 @@
-<!doctype html><title>Bulkhead Drawing Tool</title>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bulkhead Drawing Tool</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">shipdraw</span>
+      <span class="brand-sub">Bulkhead drawing tool</span>
+    </div>
+    <nav class="exports" aria-label="Export">
+      <button type="button" class="btn" data-export="dxf" disabled>AutoCAD file <small>.dxf</small></button>
+      <button type="button" class="btn" data-export="png" disabled>Picture <small>.png</small></button>
+      <button type="button" class="btn" data-export="csv" disabled>Excel list <small>.csv</small></button>
+      <button type="button" class="btn btn-primary" data-export="zip" disabled>Everything <small>.zip</small></button>
+    </nav>
+  </header>
+
+  <main class="workspace">
+    <aside class="panel inputs" aria-label="Measurements">
+      <div class="panel-head">
+        <h2>Measurements</h2>
+        <button type="button" class="link" id="reset">Reset to example</button>
+      </div>
+      <form id="form" novalidate autocomplete="off"></form>
+      <datalist id="profiles"></datalist>
+    </aside>
+
+    <section class="panel preview" aria-label="Drawing preview">
+      <div class="panel-head">
+        <h2>Live preview</h2>
+        <span class="busy" id="busy" hidden>Updating…</span>
+        <div class="zoom">
+          <button type="button" class="icon" id="zoom-out" aria-label="Zoom out">−</button>
+          <button type="button" class="icon" id="zoom-fit">Fit</button>
+          <button type="button" class="icon" id="zoom-in" aria-label="Zoom in">+</button>
+        </div>
+      </div>
+      <div class="stage" id="stage">
+        <div class="sheet" id="sheet"></div>
+        <p class="placeholder" id="placeholder">Preparing the drawing…</p>
+      </div>
+    </section>
+
+    <section class="panel results" aria-label="Checks and material list">
+      <div class="status" id="status" data-state="idle" aria-live="polite">
+        <strong id="status-title">Starting…</strong>
+        <span id="status-detail"></span>
+      </div>
+      <ul class="issues" id="issues"></ul>
+      <dl class="summary" id="summary"></dl>
+      <table class="bom" id="bom" hidden>
+        <thead>
+          <tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Length (mm)</th><th class="num">Weight (kg)</th></tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr><td></td><td>Total</td><td></td><td></td><td class="num" id="bom-total"></td></tr>
+        </tfoot>
+      </table>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
