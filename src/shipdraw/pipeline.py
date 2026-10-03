@@ -1,6 +1,6 @@
-"""The build pipeline: job → checks → drawing files.
+"""The build pipeline: job → checks → drawing (in memory) → files.
 
-Called by the CLI now and by the MCP server (build #2) later.
+Called by the CLI, by the drawing page, and later by the MCP server (build #2).
 """
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from .bom import bom_csv, build_bom
+from .bom import Bom, bom_csv, build_bom
 from .checks import CheckReport, run_checks
 from .job import Job
-from .layout import plan_sheet
+from .layout import SheetPlan, plan_sheet
 from .profiles import ProfileLibrary
 from .render.bom_table import draw_bom_table
 from .render.bulkhead_view import draw_elevation
@@ -21,7 +22,21 @@ from .render.frame_view import draw_frame_strip
 from .render.preview import render_png
 from .render.sheet import draw_border, draw_title_block, new_document
 from .standard import Standard
-from .structure import build_parts
+from .structure import BulkheadParts, build_parts
+
+if TYPE_CHECKING:
+    from ezdxf.document import Drawing
+
+
+@dataclass(frozen=True)
+class Rendered:
+    """Everything the engine produced for one job. plan, bom and doc are None when the checks failed."""
+
+    report: CheckReport
+    parts: BulkheadParts
+    plan: SheetPlan | None = None
+    bom: Bom | None = None
+    doc: Drawing | None = None
 
 
 @dataclass(frozen=True)
@@ -40,16 +55,11 @@ class BuildResult:
         return self.report.ok
 
 
-def build(
-    job: Job, standard: Standard, profiles: ProfileLibrary, out_dir: Path, *, preview: bool = True
-) -> BuildResult:
-    started = time.perf_counter()
+def render_drawing(job: Job, standard: Standard, profiles: ProfileLibrary) -> Rendered:
     parts = build_parts(job)
     report = run_checks(job, parts, standard, profiles)
     if not report.ok:
-        return BuildResult(
-            job, report, None, len(parts.stiffeners), len(parts.brackets), None, time.perf_counter() - started
-        )
+        return Rendered(report, parts)
 
     plan = plan_sheet(parts, standard)
     bom = build_bom(job, parts, profiles)
@@ -60,6 +70,20 @@ def build(
     draw_elevation(msp, job, parts, standard, plan)
     draw_frame_strip(msp, job, parts, standard, plan)
     draw_bom_table(msp, bom, standard, plan)
+    return Rendered(report, parts, plan, bom, doc)
+
+
+def build(
+    job: Job, standard: Standard, profiles: ProfileLibrary, out_dir: Path, *, preview: bool = True
+) -> BuildResult:
+    started = time.perf_counter()
+    rendered = render_drawing(job, standard, profiles)
+    report, parts = rendered.report, rendered.parts
+    if not report.ok:
+        return BuildResult(
+            job, report, None, len(parts.stiffeners), len(parts.brackets), None, time.perf_counter() - started
+        )
+    doc, bom, plan = rendered.doc, rendered.bom, rendered.plan
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
