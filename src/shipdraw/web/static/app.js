@@ -1,45 +1,70 @@
 "use strict";
 
 // Plain-language form. Field names must match shipdraw/web/form.py.
+//   key  = the part of the measurement diagram this box describes
+//   step = how much the arrow keys change the value (hold Shift for ten times as much)
 const SECTIONS = [
   { title: "Wall shape", fields: [
-    { name: "width", label: "Width", unit: "mm", hint: "Full width of the wall, side to side." },
-    { name: "height", label: "Height", unit: "mm", hint: "From the bottom of the ship to the top of the wall." },
-    { name: "corner_cut", label: "Corner cut", unit: "mm", hint: "The two bottom corners are cut off at 45°. Use 0 for square corners." },
+    { name: "width", label: "Width", unit: "mm", step: 100, key: "width",
+      hint: "Full width of the wall, from one side of the ship to the other." },
+    { name: "height", label: "Height", unit: "mm", step: 100, key: "height",
+      hint: "From the bottom of the ship (the baseline) up to the top of the wall." },
+    { name: "corner_cut", label: "Corner cut", unit: "mm", step: 50, key: "corner",
+      hint: "The two bottom corners are cut off at 45° to follow the hull. Use 0 for square corners." },
   ] },
   { title: "Steel bars", subtitle: "stiffeners", fields: [
-    { name: "profile", label: "Bar type", type: "text", list: "profiles", hint: "HP = bulb flat, FB = flat bar, L = angle. For example HP 160x8." },
-    { name: "bar_spacing", label: "Every", unit: "mm", hint: "Distance between two bars." },
-    { name: "first_at", label: "First bar at", unit: "mm", hint: "Distance from the middle line to the first bar. 0 puts a bar on the middle line." },
+    { name: "profile", label: "Bar type", type: "text", list: "profiles", key: "bars",
+      hint: "The steel section welded to the wall: HP = bulb flat, FB = flat bar, L = angle. For example HP 160x8." },
+    { name: "bar_spacing", label: "Every", unit: "mm", step: 50, key: "spacing",
+      hint: "Distance between two neighbouring bars." },
+    { name: "first_at", label: "First bar at", unit: "mm", step: 50, key: "first",
+      hint: "Distance from the middle line to the first bar. 0 puts one bar exactly on the middle line." },
   ] },
   { title: "Corner triangles", subtitle: "brackets", fields: [
-    { name: "brackets_bottom", label: "At the bottom", type: "checkbox" },
-    { name: "brackets_top", label: "At the top", type: "checkbox" },
-    { name: "bracket_size", label: "Size", unit: "mm", hint: "Length of each short side of the triangle." },
-    { name: "bracket_thickness", label: "Thickness", unit: "mm" },
+    { name: "brackets_bottom", label: "At the bottom", type: "checkbox", key: "brackets",
+      hint: "Small steel triangles that join the bottom of each bar to the floor." },
+    { name: "brackets_top", label: "At the top", type: "checkbox", key: "brackets",
+      hint: "Small steel triangles that join the top of each bar to the deck." },
+    { name: "bracket_size", label: "Size", unit: "mm", step: 10, key: "brackets",
+      hint: "Length of each of the two short sides of a triangle." },
+    { name: "bracket_thickness", label: "Thickness", unit: "mm", step: 1, key: "brackets",
+      hint: "Steel thickness of the triangles." },
   ] },
   { title: "Wall plate", fields: [
-    { name: "plate_thickness", label: "Thickness", unit: "mm" },
-    { name: "plate_grade", label: "Steel grade", type: "text", hint: "For example AH36." },
+    { name: "plate_thickness", label: "Thickness", unit: "mm", step: 1, key: "plate",
+      hint: "Steel thickness of the wall itself." },
+    { name: "plate_grade", label: "Steel grade", type: "text", key: "plate",
+      hint: "The steel quality, as written on the drawing. For example AH36." },
   ] },
   { title: "Position in the ship", fields: [
-    { name: "at_frame", label: "At frame", unit: "no.", hint: "Frames are the ship's ribs, numbered from the back. The wall sits on this one." },
-    { name: "frame_first", label: "Show frames from", unit: "no." },
-    { name: "frame_last", label: "Show frames to", unit: "no." },
-    { name: "frame_spacing", label: "Frame spacing", unit: "mm", hint: "Distance between two frames." },
+    { name: "at_frame", label: "At frame", unit: "no.", step: 1,
+      hint: "Frames are the ship's ribs, numbered from the back. The wall stands on this one." },
+    { name: "frame_first", label: "Show frames from", unit: "no.", step: 1,
+      hint: "First frame shown on the frame strip under the drawing." },
+    { name: "frame_last", label: "Show frames to", unit: "no.", step: 1,
+      hint: "Last frame shown on the frame strip under the drawing." },
+    { name: "frame_spacing", label: "Frame spacing", unit: "mm", step: 50,
+      hint: "Distance between two neighbouring frames." },
   ] },
   { title: "Title block", fields: [
-    { name: "project_name", label: "Project", type: "text" },
-    { name: "drawing_no", label: "Drawing no.", type: "text", hint: "Also used as the file name." },
-    { name: "title", label: "Title", type: "text" },
-    { name: "drawn_by", label: "Drawn by", type: "text" },
-    { name: "revision", label: "Revision", type: "text" },
+    { name: "project_name", label: "Project", type: "text", wide: true, hint: "Ship or project name, shown in the title block." },
+    { name: "title", label: "Title", type: "text", wide: true, hint: "Drawing title, shown in the title block." },
+    { name: "drawing_no", label: "Drawing no.", type: "text", hint: "Drawing number. Also used as the file name." },
+    { name: "drawn_by", label: "Drawn by", type: "text", hint: "Initials of the person who made the drawing." },
+    { name: "revision", label: "Revision", type: "text", hint: "Revision letter, for example A." },
   ] },
 ];
 
-const LABELS = Object.fromEntries(SECTIONS.flatMap((section) => section.fields.map((f) => [f.name, f.label])));
+const FIELDS = Object.fromEntries(SECTIONS.flatMap((section) => section.fields.map((field) => [field.name, field])));
+const LABELS = Object.fromEntries(Object.values(FIELDS).map((field) => [field.name, field.label]));
+const DEFAULT_CAPTION = "Click any box to see what it measures. Tip: the arrow keys change a number, Shift makes bigger steps.";
+const STATUS_ICONS = { idle: "i-dot", ok: "i-check", warning: "i-alert", error: "i-x", invalid: "i-x", offline: "i-x" };
 const PREVIEW_DELAY_MS = 350;
+const PLOT_STAGGER_MS = 2.6;  // keep in step with .sheet-layer.plotting in app.css
+const PLOT_DURATION_MS = 1100;
 const MAX_ZOOM = 8;
+const REDUCED_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)");
+
 const $ = (selector) => document.querySelector(selector);
 const plural = (count, word, suffix = "s") => `${count} ${word}${count === 1 ? "" : suffix}`;
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -52,26 +77,36 @@ const state = { defaults: null, request: null, timer: null, hasDrawing: false, c
 
 function buildForm() {
   const form = $("#form");
-  for (const section of SECTIONS) {
-    const fieldset = document.createElement("fieldset");
-    const legend = document.createElement("legend");
-    legend.textContent = section.title;
+  SECTIONS.forEach((section, index) => {
+    const group = document.createElement("div");
+    group.className = "group";
+    group.setAttribute("role", "group");
+    const title = document.createElement("h3");
+    title.className = "group-title";
+    title.id = `group-${index}`;
+    title.append(section.title);
     if (section.subtitle) {
       const small = document.createElement("small");
       small.textContent = section.subtitle;
-      legend.append(" ", small);
+      title.append(small);
     }
-    fieldset.append(legend, ...section.fields.map(buildField));
-    form.append(fieldset);
-  }
+    group.setAttribute("aria-labelledby", title.id);
+    group.append(title, ...section.fields.map(buildField));
+    form.append(group);
+  });
   form.addEventListener("input", () => schedulePreview());
   form.addEventListener("change", () => schedulePreview());
   form.addEventListener("submit", (event) => event.preventDefault());
+  form.addEventListener("keydown", stepWithArrows);
+  form.addEventListener("focusin", (event) => explain(FIELDS[event.target.name]));
+  form.addEventListener("focusout", (event) => {
+    if (!form.contains(event.relatedTarget)) explain(null);
+  });
 }
 
 function buildField(field) {
   const wrapper = document.createElement("div");
-  wrapper.className = field.type === "checkbox" ? "field field-check" : "field";
+  wrapper.className = field.type === "checkbox" ? "field field-check" : field.wide ? "field field-wide" : "field";
   wrapper.dataset.field = field.name;
   const id = `f-${field.name}`;
   const input = document.createElement("input");
@@ -80,10 +115,18 @@ function buildField(field) {
   const label = document.createElement("label");
   label.htmlFor = id;
   label.textContent = field.label;
+  const hint = document.createElement("p");
+  hint.className = "hint";
+  hint.id = `${id}-hint`;
+  hint.textContent = field.hint;
+  const message = document.createElement("p");
+  message.className = "message";
+  message.id = `${id}-msg`;
+  input.setAttribute("aria-describedby", `${hint.id} ${message.id}`);
 
   if (field.type === "checkbox") {
     input.type = "checkbox";
-    wrapper.append(input, label);
+    wrapper.append(label, input, hint);
     return wrapper;
   }
 
@@ -92,7 +135,7 @@ function buildField(field) {
   input.spellcheck = false;
   if (field.list) input.setAttribute("list", field.list);
   const box = document.createElement("div");
-  box.className = "input";
+  box.className = field.type === "text" ? "input input-text" : "input";
   box.append(input);
   if (field.unit) {
     const unit = document.createElement("span");
@@ -100,18 +143,7 @@ function buildField(field) {
     unit.textContent = field.unit;
     box.append(unit);
   }
-  const message = document.createElement("p");
-  message.className = "message";
-  message.id = `${id}-msg`;
-  input.setAttribute("aria-describedby", message.id);
-  wrapper.append(label, box);
-  if (field.hint) {
-    const hint = document.createElement("p");
-    hint.className = "hint";
-    hint.textContent = field.hint;
-    wrapper.append(hint);
-  }
-  wrapper.append(message);
+  wrapper.append(label, box, hint, message);
   return wrapper;
 }
 
@@ -136,8 +168,53 @@ function setValues(values) {
 function focusField(name) {
   const input = $("#form").elements.namedItem(name);
   if (!input) return;
-  input.scrollIntoView({ block: "center", behavior: "smooth" });
+  revealField(input.closest(".field"));
   input.focus({ preventScroll: true });
+}
+
+function revealField(field) {
+  // Scroll only the measurements list (never the page), centring the box below the sticky diagram.
+  const list = $(".inputs-scroll");
+  const behavior = REDUCED_MOTION.matches ? "auto" : "smooth";
+  if (list.scrollHeight <= list.clientHeight) {
+    field.scrollIntoView({ block: "center", behavior });  // small screens: the page itself scrolls
+    return;
+  }
+  const area = list.getBoundingClientRect();
+  const visibleTop = area.top + $("#key").offsetHeight;
+  const box = field.getBoundingClientRect();
+  list.scrollBy({ top: box.top + box.height / 2 - (visibleTop + area.bottom) / 2, behavior });
+}
+
+function stepWithArrows(event) {
+  if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+  const input = event.target;
+  const field = FIELDS[input.name];
+  if (!field?.step) return;
+  const current = Number(String(input.value).replace(/,/g, "").trim());
+  if (!Number.isFinite(current)) return;
+  event.preventDefault();
+  const delta = field.step * (event.shiftKey ? 10 : 1) * (event.key === "ArrowUp" ? 1 : -1);
+  input.value = String(Math.round((current + delta) * 1000) / 1000);
+  schedulePreview();
+}
+
+// ---------- measurement diagram ----------
+
+function explain(field) {
+  const key = $("#key");
+  key.classList.toggle("has-focus", Boolean(field?.key));
+  for (const group of key.querySelectorAll("[data-key]")) {
+    group.classList.toggle("on", Boolean(field?.key) && group.dataset.key === field.key);
+  }
+  const caption = $("#key-caption");
+  if (!field) {
+    caption.textContent = DEFAULT_CAPTION;
+    return;
+  }
+  const name = document.createElement("b");
+  name.textContent = field.label;
+  caption.replaceChildren(name, ` — ${field.hint}`);
 }
 
 // ---------- preview requests ----------
@@ -181,8 +258,8 @@ function showResult(result) {
 
   const badBoxes = Object.keys(result.field_errors).length;
   const details = {
-    ok: ["Drawing ready", "Everything checks out."],
-    warning: ["Drawing ready", `${plural(result.warnings.length, "note")} below.`],
+    ok: ["Drawing ready", "Everything checks out. Ready to export."],
+    warning: ["Drawing ready", `${plural(result.warnings.length, "note")} to look at below.`],
     error: ["Can't draw this yet", `${plural(result.errors.length, "problem")} to fix below.`],
     invalid: ["Check the highlighted boxes", `${plural(badBoxes, "box", "es")} ${badBoxes === 1 ? "needs" : "need"} attention.`],
   };
@@ -191,13 +268,22 @@ function showResult(result) {
   showDrawing(result.svg);
   showSummary(result.summary);
   showBom(result.bom, result.summary);
+  updateDocChip(result.summary);
   setExportsEnabled(result.status === "ok" || result.status === "warning");
 }
 
 function setStatus(kind, title, detail) {
-  $("#status").dataset.state = kind;
+  const status = $("#status");
+  const changed = status.dataset.state !== kind;
+  status.dataset.state = kind;
+  $("#status-use").setAttribute("href", `#${STATUS_ICONS[kind] ?? "i-dot"}`);
   $("#status-title").textContent = title;
   $("#status-detail").textContent = detail;
+  if (changed) {
+    status.classList.remove("changed");
+    void status.offsetWidth;  // restart the icon animation
+    status.classList.add("changed");
+  }
 }
 
 function showOffline() {
@@ -236,65 +322,103 @@ function showIssues(result) {
     ...result.errors.map((issue) => ({ kind: "error", ...issue })),
     ...result.warnings.map((issue) => ({ kind: "warning", ...issue })),
   ];
-  for (const item of items) {
+  items.forEach((item, index) => {
     const li = document.createElement("li");
     li.className = `issue issue-${item.kind}`;
+    li.style.animationDelay = `${index * 40}ms`;
     if (item.field && LABELS[item.field]) {
       const where = document.createElement("button");
       where.type = "button";
       where.className = "issue-field";
       where.textContent = LABELS[item.field];
+      where.title = "Go to this box";
       where.addEventListener("click", () => focusField(item.field));
-      li.append(where, " ");
+      li.append(where);
     }
     li.append(item.text);
     list.append(li);
-  }
+  });
 }
 
 function showDrawing(svg) {
   const sheet = $("#sheet");
   const placeholder = $("#placeholder");
-  if (svg) {
-    sheet.innerHTML = svg;
-    sheet.classList.remove("stale");
-    placeholder.hidden = true;
-    if (!state.hasDrawing) {
-      state.hasDrawing = true;
-      fitView();
-    }
+  if (!svg) {
+    sheet.classList.add("stale");
+    if (!state.hasDrawing) placeholder.textContent = "The drawing appears here once the measurements are valid.";
     return;
   }
-  sheet.classList.add("stale");
+  sheet.classList.remove("stale");
+  placeholder.hidden = true;
+  const layer = document.createElement("div");
+  layer.className = "sheet-layer";
+  layer.innerHTML = svg;
+  const previous = [...sheet.children];
+
   if (!state.hasDrawing) {
-    placeholder.hidden = false;
-    placeholder.textContent = "The drawing appears here once the measurements are valid.";
+    state.hasDrawing = true;
+    if (!REDUCED_MOTION.matches) plot(layer);
+    sheet.append(layer);
+    fitView();
+    return;
   }
+  // Cross-fade: the new sheet fades in on top, then the old one is removed.
+  layer.classList.add("entering");
+  sheet.append(layer);
+  void layer.offsetWidth;
+  layer.classList.remove("entering");
+  setTimeout(() => previous.forEach((old) => old.remove()), 320);
+}
+
+function plot(layer) {
+  // Draw every line like a pen plotter: each path's dash runs from empty to full.
+  const paths = layer.querySelectorAll("path");
+  paths.forEach((path, index) => {
+    path.setAttribute("pathLength", "1");
+    path.style.setProperty("--i", index);
+  });
+  layer.classList.add("plotting");
+  setTimeout(() => layer.classList.remove("plotting"), paths.length * PLOT_STAGGER_MS + PLOT_DURATION_MS + 100);
 }
 
 function showSummary(summary) {
   const box = $("#summary");
-  box.replaceChildren();
+  box.classList.toggle("is-empty", !summary);
   if (!summary) return;
-  const items = [
-    ["Scale", `1:${summary.scale}`],
-    ["Steel bars", summary.stiffeners],
-    ["Corner triangles", summary.brackets],
-    ["Total weight", `${formatNumber(summary.total_weight_kg, 1)} kg`],
-  ];
-  for (const [term, value] of items) {
-    const item = document.createElement("div");
-    const dt = document.createElement("dt");
-    dt.textContent = term;
-    const dd = document.createElement("dd");
-    dd.textContent = value;
-    item.append(dt, dd);
-    box.append(item);
+  countTo(box.querySelector('[data-readout="scale"]'), summary.scale, 0, "1:");
+  countTo(box.querySelector('[data-readout="stiffeners"]'), summary.stiffeners);
+  countTo(box.querySelector('[data-readout="brackets"]'), summary.brackets);
+  countTo(box.querySelector('[data-readout="total_weight_kg"]'), summary.total_weight_kg, 1);
+}
+
+function countTo(element, target, digits = 0, prefix = "") {
+  const from = Number(element.dataset.value ?? target);
+  element.dataset.value = target;
+  cancelAnimationFrame(element.frame);
+  clearTimeout(element.settle);
+  const show = (value) => { element.textContent = prefix + formatNumber(value, digits); };
+  if (REDUCED_MOTION.matches || document.hidden || from === target) {
+    show(target);
+    return;
   }
+  const start = performance.now();
+  const duration = 600;
+  const step = (now) => {
+    const t = Math.min(1, (now - start) / duration);
+    show(from + (target - from) * (1 - Math.pow(1 - t, 3)));
+    if (t < 1) element.frame = requestAnimationFrame(step);
+  };
+  element.frame = requestAnimationFrame(step);
+  // Animation frames pause in background tabs; make sure the true value always lands.
+  element.settle = setTimeout(() => {
+    cancelAnimationFrame(element.frame);
+    show(target);
+  }, duration + 50);
 }
 
 function showBom(rows, summary) {
   const table = $("#bom");
+  $("#bom-empty").hidden = Boolean(rows);
   if (!rows) {
     table.hidden = true;
     return;
@@ -320,6 +444,15 @@ function showBom(rows, summary) {
   }
   $("#bom-total").textContent = formatNumber(summary.total_weight_kg, 1);
   table.hidden = false;
+}
+
+function updateDocChip(summary) {
+  const values = readValues();
+  $("#doc-no").textContent = values.drawing_no.trim() || "—";
+  const parts = [];
+  if (values.revision.trim()) parts.push(`Rev ${values.revision.trim()}`);
+  if (summary) parts.push(`1:${summary.scale}`);
+  $("#doc-meta").textContent = parts.join(" · ");
 }
 
 // ---------- exports ----------
@@ -364,6 +497,8 @@ async function exportFile(kind, button) {
 
 function toast(text, kind) {
   const element = $("#toast");
+  element.hidden = true;
+  void element.offsetWidth;  // restart the slide-in animation
   element.textContent = text;
   element.dataset.kind = kind;
   element.hidden = false;
@@ -380,6 +515,7 @@ function applyView() {
   view.y = Math.min(0, Math.max(stage.height - stage.height * view.scale, view.y));
   $("#sheet").style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
   $("#stage").classList.toggle("zoomed", view.scale > 1);
+  $("#zoom-level").textContent = `${Math.round(view.scale * 100)}%`;
 }
 
 function fitView() {
@@ -433,13 +569,30 @@ function setupViewer() {
   $("#zoom-in").addEventListener("click", () => zoomAtCentre(1.25));
   $("#zoom-out").addEventListener("click", () => zoomAtCentre(0.8));
   $("#zoom-fit").addEventListener("click", fitView);
-  window.addEventListener("resize", applyView);
+  new ResizeObserver(applyView).observe(stage);
+}
+
+// ---------- address bar ----------
+
+// Measurements in the address bar pre-fill the page, e.g. /?width=12000&bar_spacing=500,
+// so a set-up can be bookmarked or shared. ?focus=<field> puts the cursor in that box.
+function applyAddressBar() {
+  const params = new URLSearchParams(window.location.search);
+  const values = {};
+  for (const [name, value] of params) {
+    if (!FIELDS[name]) continue;
+    values[name] = FIELDS[name].type === "checkbox" ? !["0", "false", "no", "off"].includes(value.toLowerCase()) : value;
+  }
+  setValues(values);
+  const focus = params.get("focus");
+  if (focus && FIELDS[focus]) focusField(focus);
 }
 
 // ---------- start ----------
 
 async function init() {
   buildForm();
+  explain(null);
   setupViewer();
   for (const button of document.querySelectorAll("[data-export]")) {
     button.addEventListener("click", () => exportFile(button.dataset.export, button));
@@ -455,6 +608,7 @@ async function init() {
     state.defaults = data.values;
     $("#profiles").replaceChildren(...data.profiles.map((name) => Object.assign(document.createElement("option"), { value: name })));
     setValues(data.values);
+    applyAddressBar();
     schedulePreview(0);
   } catch {
     showOffline();

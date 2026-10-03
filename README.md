@@ -40,6 +40,8 @@ Double-click **`Start drawing tool.bat`**. A black window opens; keep it open, a
 
 Close the black window to stop the tool.
 
+Tips: click a box and the diagram above the boxes shows what it measures. The arrow keys change a number (hold Shift for bigger steps). Measurements in the address bar pre-fill the page, so a set-up can be bookmarked, e.g. `http://127.0.0.1:8765/?width=12000&bar_spacing=500`.
+
 ## Company standard
 
 - `config/standard.yaml` holds the sheet, layers, text sizes, dimension style, title block and rule limits. **All values are placeholders** until the client's standard is supplied. Change them there; no code changes are needed.

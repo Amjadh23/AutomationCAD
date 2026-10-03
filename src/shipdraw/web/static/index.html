@@ -3,66 +3,181 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bulkhead Drawing Tool</title>
+  <meta name="color-scheme" content="dark">
+  <title>Bulkhead Drawing Tool · shipdraw</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/app.css">
   <script src="/static/app.js" defer></script>
 </head>
 <body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-cad" viewBox="0 0 20 20"><path d="M4 3.5v12.5h12.5M4 7.5h2.5M4 11h4M8 16v-2.5M11.5 16v-4"/></symbol>
+    <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 13.5l4-4 3 3 2.2-2.2L17 15"/><circle cx="13.2" cy="7.8" r="1.2"/></symbol>
+    <symbol id="i-table" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><path d="M3 8.2h14M3 12.2h14M8.2 4v12"/></symbol>
+    <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3.5v9m0 0L6.5 9M10 12.5L13.5 9M4 14v2.5h12V14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 20 20"><path d="M4.5 10h11"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 20 20"><path d="M3.5 7.5v-4h4M12.5 3.5h4v4M16.5 12.5v4h-4M7.5 16.5h-4v-4"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 20 20"><path d="M4.2 10a5.8 5.8 0 1 0 1.7-4.1M4 3.8v3.4h3.4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 20 20"><path d="M5 10.4l3.1 3.1L15 6.6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 20 20"><path d="M10 3.6l7 12.4H3zM10 8.4v3.6M10 14.1v.1"/></symbol>
+    <symbol id="i-x" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8"/></symbol>
+    <symbol id="i-dot" viewBox="0 0 20 20"><circle cx="10" cy="10" r="2"/></symbol>
+  </svg>
+
   <header class="topbar">
-    <div class="brand">
+    <a class="brand" href="/" aria-label="shipdraw, reload the page">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path class="bm-hull" d="M5 8h22v13l-4 4H9l-4-4z"/>
+        <path class="bm-bars" d="M9.5 8v17M13 8v17M19 8v17M22.5 8v17"/>
+        <path class="bm-cl" d="M16 4.5v24"/>
+      </svg>
       <span class="brand-name">shipdraw</span>
+      <span class="brand-divider" aria-hidden="true"></span>
       <span class="brand-sub">Bulkhead drawing tool</span>
+    </a>
+    <div class="doc-chip" aria-label="Current drawing">
+      <span class="doc-no" id="doc-no">—</span>
+      <span class="doc-meta" id="doc-meta"></span>
     </div>
     <nav class="exports" aria-label="Export">
-      <button type="button" class="btn" data-export="dxf" disabled>AutoCAD file <small>.dxf</small></button>
-      <button type="button" class="btn" data-export="png" disabled>Picture <small>.png</small></button>
-      <button type="button" class="btn" data-export="csv" disabled>Excel list <small>.csv</small></button>
-      <button type="button" class="btn btn-primary" data-export="zip" disabled>Everything <small>.zip</small></button>
+      <span class="exports-label">Export</span>
+      <button type="button" class="btn" data-export="dxf" disabled><svg aria-hidden="true"><use href="#i-cad"/></svg><span class="btn-label">AutoCAD</span><small>.dxf</small></button>
+      <button type="button" class="btn" data-export="png" disabled><svg aria-hidden="true"><use href="#i-image"/></svg><span class="btn-label">Picture</span><small>.png</small></button>
+      <button type="button" class="btn" data-export="csv" disabled><svg aria-hidden="true"><use href="#i-table"/></svg><span class="btn-label">Excel list</span><small>.csv</small></button>
+      <button type="button" class="btn btn-primary" data-export="zip" disabled><svg aria-hidden="true"><use href="#i-download"/></svg><span class="btn-label">Download all</span><small>.zip</small></button>
     </nav>
   </header>
 
   <main class="workspace">
     <aside class="panel inputs" aria-label="Measurements">
       <div class="panel-head">
-        <h2>Measurements</h2>
-        <button type="button" class="link" id="reset">Reset to example</button>
+        <h2><span class="eyebrow">01 · Input</span>Measurements</h2>
+        <button type="button" class="link" id="reset"><svg aria-hidden="true"><use href="#i-reset"/></svg>Reset to example</button>
       </div>
-      <form id="form" novalidate autocomplete="off"></form>
-      <datalist id="profiles"></datalist>
+      <div class="inputs-scroll">
+        <figure class="key" id="key">
+          <svg class="key-svg" viewBox="0 0 320 140" role="img" aria-label="Diagram of what the measurements mean">
+            <g data-key="plate">
+              <path class="k-plate" d="M70 110H230L250 90V30H50V90Z"/>
+              <path class="k-lead" d="M256 73H241"/>
+              <text class="k-label" x="260" y="76">Wall plate</text>
+            </g>
+            <path class="k-cl" d="M150 18V122"/>
+            <g data-key="bars">
+              <path class="k-bar" d="M66 106V30M90 110V30M114 110V30M138 110V30M162 110V30M186 110V30M210 110V30M234 106V30"/>
+              <path class="k-lead" d="M256 53H236"/>
+              <text class="k-label" x="260" y="56">Steel bars</text>
+            </g>
+            <g data-key="brackets">
+              <path class="k-bkt" d="M90 110V102L98 110ZM114 110V102L122 110ZM138 110V102L146 110ZM162 110V102L154 110ZM186 110V102L178 110ZM210 110V102L202 110ZM90 30V38L98 30ZM114 30V38L122 30ZM138 30V38L146 30ZM162 30V38L154 30ZM186 30V38L178 30ZM210 30V38L202 30Z"/>
+              <path class="k-lead" d="M256 33H212"/>
+              <text class="k-label" x="260" y="36">Triangles</text>
+            </g>
+            <g data-key="corner">
+              <path class="k-edge" d="M50 90L70 110M230 110L250 90"/>
+              <path class="k-lead" d="M256 101H242"/>
+              <text class="k-label" x="260" y="104">Corner cut</text>
+            </g>
+            <g data-key="width">
+              <path class="k-ext" d="M50 92V127M250 92V127"/>
+              <path class="k-dim" d="M50 124H250"/>
+              <path class="k-tick" d="M47 127L53 121M247 127L253 121"/>
+              <text class="k-label" x="150" y="137" text-anchor="middle">Width</text>
+            </g>
+            <g data-key="height">
+              <path class="k-ext" d="M48 30H29M68 110H29"/>
+              <path class="k-dim" d="M32 30V110"/>
+              <path class="k-tick" d="M29 33L35 27M29 113L35 107"/>
+              <text class="k-label" transform="translate(24 70) rotate(-90)" text-anchor="middle">Height</text>
+            </g>
+            <g data-key="spacing">
+              <path class="k-ext" d="M186 28V17M210 28V17"/>
+              <path class="k-dim" d="M186 20H210"/>
+              <path class="k-tick" d="M183 23L189 17M207 23L213 17"/>
+              <text class="k-label" x="198" y="13" text-anchor="middle">Every</text>
+            </g>
+            <g data-key="first">
+              <path class="k-ext" d="M162 28V17"/>
+              <path class="k-dim" d="M150 20H162"/>
+              <path class="k-tick" d="M147 23L153 17M159 23L165 17"/>
+              <text class="k-label" x="156" y="13" text-anchor="middle">First bar</text>
+            </g>
+          </svg>
+          <figcaption id="key-caption"></figcaption>
+        </figure>
+        <form id="form" novalidate autocomplete="off"></form>
+        <datalist id="profiles"></datalist>
+      </div>
     </aside>
 
-    <section class="panel preview" aria-label="Drawing preview">
+    <section class="panel canvas preview" aria-label="Drawing preview">
       <div class="panel-head">
-        <h2>Live preview</h2>
-        <span class="busy" id="busy" hidden>Updating…</span>
-        <div class="zoom">
-          <button type="button" class="icon" id="zoom-out" aria-label="Zoom out">−</button>
-          <button type="button" class="icon" id="zoom-fit">Fit</button>
-          <button type="button" class="icon" id="zoom-in" aria-label="Zoom in">+</button>
+        <h2><span class="eyebrow">02 · Output</span>Live preview</h2>
+        <span class="busy" id="busy" hidden><span class="pulse" aria-hidden="true"></span>Updating</span>
+        <div class="zoom" role="group" aria-label="Zoom">
+          <button type="button" class="icon" id="zoom-out" aria-label="Zoom out"><svg aria-hidden="true"><use href="#i-minus"/></svg></button>
+          <span class="zoom-level" id="zoom-level" aria-live="off">100%</span>
+          <button type="button" class="icon" id="zoom-in" aria-label="Zoom in"><svg aria-hidden="true"><use href="#i-plus"/></svg></button>
+          <button type="button" class="icon" id="zoom-fit" aria-label="Fit the whole sheet"><svg aria-hidden="true"><use href="#i-fit"/></svg></button>
         </div>
       </div>
-      <div class="stage" id="stage">
-        <div class="sheet" id="sheet"></div>
-        <p class="placeholder" id="placeholder">Preparing the drawing…</p>
+      <div class="board" id="board">
+        <div class="paper">
+          <div class="stage" id="stage">
+            <div class="sheet" id="sheet"></div>
+            <p class="placeholder" id="placeholder">Preparing the drawing</p>
+          </div>
+          <span class="crop crop-tl" aria-hidden="true"></span>
+          <span class="crop crop-tr" aria-hidden="true"></span>
+          <span class="crop crop-bl" aria-hidden="true"></span>
+          <span class="crop crop-br" aria-hidden="true"></span>
+        </div>
       </div>
+      <footer class="legend" aria-label="Layer colours">
+        <span><i style="--c:#ffffff"></i>Plate &amp; text</span>
+        <span><i style="--c:#00ff00"></i>Steel bars</span>
+        <span><i style="--c:#00ffff"></i>Triangles</span>
+        <span><i style="--c:#ff0000"></i>Centre &amp; base line</span>
+        <span><i style="--c:#9aa3ad"></i>Frames</span>
+        <span><i style="--c:#ffff00"></i>Dimensions</span>
+        <span class="legend-hint">Scroll to zoom · drag to move · double-click to fit</span>
+      </footer>
     </section>
 
-    <section class="panel results" aria-label="Checks and material list">
-      <div class="status" id="status" data-state="idle" aria-live="polite">
-        <strong id="status-title">Starting…</strong>
-        <span id="status-detail"></span>
+    <section class="panel report results" aria-label="Checks and material list">
+      <div class="panel-head">
+        <h2><span class="eyebrow">03 · Check</span>Report</h2>
       </div>
-      <ul class="issues" id="issues"></ul>
-      <dl class="summary" id="summary"></dl>
-      <table class="bom" id="bom" hidden>
-        <thead>
-          <tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Length (mm)</th><th class="num">Weight (kg)</th></tr>
-        </thead>
-        <tbody></tbody>
-        <tfoot>
-          <tr><td></td><td>Total</td><td></td><td></td><td class="num" id="bom-total"></td></tr>
-        </tfoot>
-      </table>
+      <div class="report-body">
+        <div class="status" id="status" data-state="idle" aria-live="polite">
+          <span class="status-icon" aria-hidden="true"><svg><use id="status-use" href="#i-dot"/></svg></span>
+          <div class="status-text">
+            <strong id="status-title">Starting</strong>
+            <span id="status-detail">Connecting to the drawing engine…</span>
+          </div>
+        </div>
+        <ul class="issues" id="issues"></ul>
+        <dl class="summary is-empty" id="summary">
+          <div><dt>Scale</dt><dd><span class="v" data-readout="scale">—</span></dd></div>
+          <div><dt>Steel bars</dt><dd><span class="v" data-readout="stiffeners">—</span></dd></div>
+          <div><dt>Triangles</dt><dd><span class="v" data-readout="brackets">—</span></dd></div>
+          <div><dt>Total weight</dt><dd><span class="v" data-readout="total_weight_kg">—</span><small>kg</small></dd></div>
+        </dl>
+        <div class="bom-block">
+          <h3>Material list <span>lengths in mm · weights in kg</span></h3>
+          <table class="bom" id="bom" hidden>
+            <thead>
+              <tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Length</th><th class="num">Weight</th></tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr><td></td><td>Total</td><td></td><td></td><td class="num" id="bom-total"></td></tr>
+            </tfoot>
+          </table>
+          <p class="bom-empty" id="bom-empty">The list appears once the drawing is ready.</p>
+        </div>
+      </div>
     </section>
   </main>
 
